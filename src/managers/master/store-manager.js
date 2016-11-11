@@ -95,6 +95,17 @@ module.exports = class StoreManager extends BaseManager {
 
                     if (!valid.name || valid.name == '')
                         errors["name"] = "name is required"; 
+                    
+                    if (!valid.address || valid.address == '')
+                        errors["address"] = "address is required";
+                    
+                    if (!valid.phone || valid.phone == '')
+                        errors["phone"] = "phone is required";
+                        
+                    if (!valid.salesCapital)
+                        errors["salesCapital"] = "Sales Capital is required";
+                    else if(valid.salesCapital <= 0)
+                        errors["salesCapital"] = "Sales Capital must be greater than 0";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
