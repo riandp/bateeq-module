@@ -19,7 +19,7 @@ module.exports = class InventoryManager {
         this.inventoryCollection = this.db.use(map.inventory.Inventory);
         this.inventoryMovementCollection = this.db.use(map.inventory.InventoryMovement);
 
-        var StorageManager = require('./storage-manager');
+        var StorageManager = require('../master/storage-manager');
         this.storageManager = new StorageManager(db, user);
 
         var ItemManager = require('../master/item-manager');

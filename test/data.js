@@ -38,7 +38,7 @@ function getSertStorages(db) {
     }];
 
 
-    var StorageManager = require("../src/managers/inventory/storage-manager");
+    var StorageManager = require("../src/managers/master/storage-manager");
     return new Promise((resolve, reject) => {
         var manager = new StorageManager(db, {
             username: "unit-test"
@@ -515,7 +515,7 @@ function getSertSuppliers(db) {
         description: "Unit test data: supplier 01."
     }];
 
-    var SupplierManager = require("../src/managers/inventory/supplier-manager");
+    var SupplierManager = require("../src/managers/master/supplier-manager");
     return new Promise((resolve, reject) => {
         var manager = new SupplierManager(db, {
             username: "unit-test"
@@ -566,11 +566,14 @@ function getSertStores(db, storages) {
         code: "ST-FNG",
         name: "Finishing[UT]",
         description: "Unit test data: finishing storage.",
-        storageId: storages["UT-FNG"]._id,
-        storage: storages["UT-FNG"],
+        //storageId: storages["UT-FNG"]._id,
+        //storage: storages["UT-FNG"],
         salesCategoryId: {},
         salesCategory: {},
         salesTarget: 5000000,
+        address: "Address",
+        phone: "123456789",
+        salesCapital: "100000000",
         shifts: [{
             shift: 1,
             dateFrom: new Date("2000-01-01T00:00:00"),
@@ -584,11 +587,14 @@ function getSertStores(db, storages) {
         code: "ST-BJB",
         name: "Pusat - Finished Goods[UT]",
         description: "Unit test data: finished goods storage.",
-        storageId: storages["UT-BJB"]._id,
-        storage: storages["UT-BJB"],
+        //storageId: storages["UT-BJB"]._id,
+        //storage: storages["UT-BJB"],
         salesCategoryId: {},
         salesCategory: {},
         salesTarget: 5000000,
+        address: "Address",
+        phone: "123456789",
+        salesCapital: "100000000",
         shifts: [{
             shift: 1,
             dateFrom: new Date("2000-01-01T00:00:00"),
@@ -602,11 +608,14 @@ function getSertStores(db, storages) {
         code: "ST-BJR",
         name: "Pusat - Return Finished Goods[UT]",
         description: "Unit test data: returned finished goods storage.",
-        storageId: storages["UT-BJR"]._id,
-        storage: storages["UT-BJR"],
+        //storageId: storages["UT-BJR"]._id,
+        //storage: storages["UT-BJR"],
         salesCategoryId: {},
         salesCategory: {},
         salesTarget: 5000000,
+        address: "Address",
+        phone: "123456789",
+        salesCapital: "100000000",
         shifts: [{
             shift: 1,
             dateFrom: new Date("2000-01-01T00:00:00"),
@@ -620,11 +629,14 @@ function getSertStores(db, storages) {
         code: "ST-ACC",
         name: "Accessories[UT]",
         description: "Unit test data: accessories storage.",
-        storageId: storages["UT-ACC"]._id,
-        storage: storages["UT-ACC"],
+        //storageId: storages["UT-ACC"]._id,
+        //storage: storages["UT-ACC"],
         salesCategoryId: {},
         salesCategory: {},
         salesTarget: 5000000,
+        address: "Address",
+        phone: "123456789",
+        salesCapital: "100000000",
         shifts: [{
             shift: 1,
             dateFrom: new Date("2000-01-01T00:00:00"),
@@ -638,11 +650,14 @@ function getSertStores(db, storages) {
         code: "ST-SWG",
         name: "Sewing[UT]",
         description: "Unit test data: sewing storage.",
-        storageId: storages["UT-SWG"]._id,
-        storage: storages["UT-SWG"],
+        //storageId: storages["UT-SWG"]._id,
+        //storage: storages["UT-SWG"],
         salesCategoryId: {},
         salesCategory: {},
         salesTarget: 5000000,
+        address: "Address",
+        phone: "123456789",
+        salesCapital: "100000000",
         shifts: [{
             shift: 1,
             dateFrom: new Date("2000-01-01T00:00:00"),
@@ -656,11 +671,14 @@ function getSertStores(db, storages) {
         code: "ST-MHD",
         name: "Merchandiser[UT]",
         description: "Unit test data: merhandiser storage.",
-        storageId: storages["UT-MHD"]._id,
-        storage: storages["UT-MHD"],
+        //storageId: storages["UT-MHD"]._id,
+        //storage: storages["UT-MHD"],
         salesCategoryId: {},
         salesCategory: {},
         salesTarget: 5000000,
+        address: "Address",
+        phone: "123456789",
+        salesCapital: "100000000",
         shifts: [{
             shift: 1,
             dateFrom: new Date("2000-01-01T00:00:00"),
@@ -674,11 +692,14 @@ function getSertStores(db, storages) {
         code: "ST-ST1",
         name: "Store 01[UT]",
         description: "Unit test data: store 01 storage",
-        storageId: storages["UT-ST1"]._id,
-        storage: storages["UT-ST1"],
+        //storageId: storages["UT-ST1"]._id,
+        //storage: storages["UT-ST1"],
         salesCategoryId: {},
         salesCategory: {},
         salesTarget: 5000000,
+        address: "Address",
+        phone: "123456789",
+        salesCapital: "100000000",
         shifts: [{
             shift: 1,
             dateFrom: new Date("2000-01-01T00:00:00"),
@@ -692,11 +713,14 @@ function getSertStores(db, storages) {
         code: "ST-ST2",
         name: "Store 02[UT]",
         description: "Unit test data: store 02 storage",
-        storageId: storages["UT-ST2"]._id,
-        storage: storages["UT-ST2"],
+        //storageId: storages["UT-ST2"]._id,
+        //storage: storages["UT-ST2"],
         salesCategoryId: {},
         salesCategory: {},
         salesTarget: 5000000,
+        address: "Address",
+        phone: "123456789",
+        salesCapital: "100000000",
         shifts: [{
             shift: 1,
             dateFrom: new Date("2000-01-01T00:00:00"),

@@ -19,7 +19,7 @@ module.exports = class BaseManager {
     _getQuery(paging) {
         throw new Error('_getQuery(paging) not implemented');
     }
-    
+
     _createIndexes() {
         return Promise.resolve(true);
     }
@@ -132,6 +132,24 @@ module.exports = class BaseManager {
                     reject(e);
                 });
         });
+    }
+
+    _delete(id) {
+
+        if (id === '')
+            return Promise.resolve(null); 
+        else {
+            return this.collection.deleteOne({
+                    _id: id
+                })
+                .then(result => {
+                    return result.n == 1;
+                })
+                .catch(e => {
+
+                    throw e;
+                });
+        }
     }
 
     getSingleById(id) {

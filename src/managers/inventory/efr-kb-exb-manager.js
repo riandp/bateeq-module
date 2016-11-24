@@ -22,7 +22,7 @@ module.exports = class PusatBarangBaruKirimBarangJadiAksesorisManager {
         this.user = user;
         this.expeditionDocCollection = this.db.use(map.inventory.ExpeditionDoc);
 
-        var StorageManager = require('./storage-manager');
+        var StorageManager = require('../master/storage-manager');
         this.storageManager = new StorageManager(db, user);
 
         var TransferOutDocManager = require('./transfer-out-doc-manager');

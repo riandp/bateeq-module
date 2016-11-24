@@ -117,13 +117,12 @@ module.exports = class ItemManager extends BaseManager {
                 })
         });
     }
-    _getQuery(paging) {
-        var deleted = {
+    _getQuery(paging) { 
+        var basicFilter = {
             _deleted: false
-        };
-        var query = paging.keyword ? {
-            '$and': [deleted]
-        } : deleted;
+        }, keywordFilter={};
+        
+        var query = {};
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
@@ -137,12 +136,12 @@ module.exports = class ItemManager extends BaseManager {
                     '$regex': regex
                 }
             };
-            var $or = {
+            
+            keywordFilter = {
                 '$or': [filterCode, filterName]
-            };
-
-            query['$and'].push($or);
+            }; 
         }
+        query = { '$and': [basicFilter, paging.filter, keywordFilter] };
         return query;
     }
 

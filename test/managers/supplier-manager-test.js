@@ -1,10 +1,10 @@
 var should = require('should');
 var helper = require('../helper');
-var validate = require('bateeq-models').validator.inventory;
+var validate = require('bateeq-models').validator.master;
 var manager;
 
 function getData() {
-    var Supplier = require('bateeq-models').inventory.Supplier;
+    var Supplier = require('bateeq-models').master.Supplier;
     var supplier = new Supplier();
 
     var now = new Date();
@@ -23,7 +23,7 @@ function getData() {
 before('#00. connect db', function(done) {
     helper.getDb()
         .then(db => {
-            var SupplierManager = require('../../src/managers/inventory/supplier-manager');
+            var SupplierManager = require('../../src/managers/master/supplier-manager');
             manager = new SupplierManager(db, {
                 username: 'unit-test'
             });
@@ -31,7 +31,7 @@ before('#00. connect db', function(done) {
         })
         .catch(e => {
             done(e);
-        })
+        });
 });
 
 var createdId;

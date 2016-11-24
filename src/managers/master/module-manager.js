@@ -5,211 +5,54 @@ var ObjectId = require('mongodb').ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
+var BaseManager = require('../base-manager');
 var BateeqModels = require('bateeq-models');
 var map = BateeqModels.map;
 
 var Module = BateeqModels.master.Module;
 
 
-module.exports = class ModuleManager {
+module.exports = class ModuleManager extends BaseManager {
     constructor(db, user) {
-        this.db = db;
-        this.user = user;
-        this.moduleCollection = this.db.use(map.master.Module);
-    }
+        super(db, user);
+        this.collection = this.db.use(map.master.Module); 
+    } 
 
-    read(paging) {
-        var _paging = Object.assign({
-            page: 1,
-            size: 20,
-            order: '_id',
-            asc: true
-        }, paging);
+    _getQuery(paging) { 
+        
+        var basicFilter = {
+            _deleted: false
+        }, keywordFilter={};
+        
+        var query = {};
 
-        return new Promise((resolve, reject) => {
-            var deleted = {
-                _deleted: false
+        if (paging.keyword) {
+            var regex = new RegExp(paging.keyword, "i");
+            var filterCode = {
+                'code': {
+                    '$regex': regex
+                }
             };
-            var query = _paging.keyword ? {
-                '$and': [deleted]
-            } : deleted;
-
-            if (_paging.keyword) {
-                var regex = new RegExp(_paging.keyword, "i");
-                var filterCode = {
-                    'code': {
-                        '$regex': regex
-                    }
-                };
-                var filterName = {
-                    'name': {
-                        '$regex': regex
-                    }
-                };
-                var $or = {
-                    '$or': [filterCode, filterName]
-                };
-
-                query['$and'].push($or);
-            }
-
-
-            this.moduleCollection
-                .where(query)
-                .page(_paging.page, _paging.size)
-                .orderBy(_paging.order, _paging.asc)
-                .execute()
-                .then(modules => {
-                    resolve(modules);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getSingleById(id) {
-        return new Promise((resolve, reject) => {
-            if (id === '')
-                resolve(null);
-            var query = {
-                _id: new ObjectId(id),
-                _deleted: false
+            var filterName = {
+                'name': {
+                    '$regex': regex
+                }
             };
-            this.getSingleByQuery(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
+            
+            keywordFilter = {
+                '$or': [filterCode, filterName]
+            }; 
+        }
+        query = { '$and': [basicFilter, paging.filter, keywordFilter] };
+        return query;
     }
 
-    getByCode(code) {
-        return new Promise((resolve, reject) => {
-            if (code === '')
-                resolve(null);
-            var query = {
-                code: code,
-                _deleted: false
-            };
-            this.getSingleByQuery(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getSingleByIdOrDefault(id) {
-        return new Promise((resolve, reject) => {
-            if (id === '')
-                resolve(null);
-            var query = {
-                _id: new ObjectId(id),
-                _deleted: false
-            };
-            this.getSingleByQueryOrDefault(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        });
-    }
-
-    getSingleByQuery(query) {
-        return new Promise((resolve, reject) => {
-            this.moduleCollection
-                .single(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        })
-    }
-
-    getSingleByQueryOrDefault(query) {
-        return new Promise((resolve, reject) => {
-            this.moduleCollection
-                .singleOrDefault(query)
-                .then(module => {
-                    resolve(module);
-                })
-                .catch(e => {
-                    reject(e);
-                });
-        })
-    }
-
-    create(module) {
-        return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-
-                    this.moduleCollection.insert(validModule)
-                        .then(id => {
-                            resolve(id);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        })
-                })
-                .catch(e => {
-                    reject(e);
-                })
-        });
-    }
-
-    update(module) {
-        return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-                    this.moduleCollection.update(validModule)
-                        .then(id => {
-                            resolve(id);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        })
-                })
-                .catch(e => {
-                    reject(e);
-                })
-        });
-    }
-
-    delete(module) {
-        return new Promise((resolve, reject) => {
-            this._validate(module)
-                .then(validModule => {
-                    validModule._deleted = true;
-                    this.moduleCollection.update(validModule)
-                        .then(id => {
-                            resolve(id);
-                        })
-                        .catch(e => {
-                            reject(e);
-                        })
-                })
-                .catch(e => {
-                    reject(e);
-                })
-        });
-    }
- 
     _validate(module) {
-        var errors = {};
+         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = new Module(module);
             // 1. begin: Declare promises.
-            var getModule = this.moduleCollection.singleOrDefault({
+            var getModule = this.collection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
@@ -247,5 +90,5 @@ module.exports = class ModuleManager {
                     reject(e);
                 })
         });
-    }
+    } 
 };

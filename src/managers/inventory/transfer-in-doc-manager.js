@@ -17,7 +17,7 @@ module.exports = class TransferInDocManager {
         this.db = db;
         this.user = user;
         this.transferInDocCollection = this.db.use(map.inventory.TransferInDoc);
-        var StorageManager = require('./storage-manager');
+        var StorageManager = require('../master/storage-manager');
         this.storageManager = new StorageManager(db, user);
 
         var ItemManager = require('../master/item-manager');

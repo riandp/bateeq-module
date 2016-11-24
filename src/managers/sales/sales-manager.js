@@ -9,6 +9,7 @@ var BaseManager = require('../base-manager');
 var BateeqModels = require('bateeq-models');
 var Sales = BateeqModels.sales.Sales; 
 var TransferOutDoc = BateeqModels.inventory.TransferOutDoc;
+var TransferInDoc = BateeqModels.inventory.TransferInDoc;
 var map = BateeqModels.map;
 var generateCode = require('../../utils/code-generator');
 
@@ -31,6 +32,9 @@ module.exports = class SalesManager extends BaseManager {
                 
         var TransferOutDocManager = require('../inventory/transfer-out-doc-manager');
         this.transferOutDocManager = new TransferOutDocManager(db, user);
+        
+        var TransferInDocManager = require('../inventory/transfer-in-doc-manager');
+        this.transferInDocManager = new TransferInDocManager(db, user);
         
         var InventoryManager = require('../inventory/inventory-manager');
         this.inventoryManager = new InventoryManager(db, user);
@@ -89,27 +93,58 @@ module.exports = class SalesManager extends BaseManager {
             sales.code = generateCode("sales");
             this._validate(sales)
                 .then(validSales => {   
+                    var isAnyTransferOut = false;
                     var validTransferOutDoc = {};
-                    validTransferOutDoc.code = generateCode("sales");
+                    validTransferOutDoc.code = sales.code;
                     validTransferOutDoc.reference = validSales.code;
                     validTransferOutDoc.sourceId = validSales.store.storageId;
                     validTransferOutDoc.destinationId = validSales.store.storageId;
                     validTransferOutDoc.items = [];
                     for (var item of validSales.items) {
-                        var newitem = {};
-                        newitem.itemId = item.itemId;
-                        newitem.quantity = item.quantity;
-                        validTransferOutDoc.items.push(newitem);
+                        if(!item.isReturn) {
+                            var newitem = {};
+                            newitem.itemId = item.itemId;
+                            newitem.quantity = item.quantity;
+                            validTransferOutDoc.items.push(newitem);
+                            isAnyTransferOut = true;
+                        }
                     } 
                     validTransferOutDoc = new TransferOutDoc(validTransferOutDoc);
                     
+                    var isAnyTransferIn = false;
+                    var validTransferInDoc = {};
+                    validTransferInDoc.code = sales.code;
+                    validTransferInDoc.reference = validSales.code;
+                    validTransferInDoc.sourceId = validSales.store.storageId;
+                    validTransferInDoc.destinationId = validSales.store.storageId;
+                    validTransferInDoc.items = [];
+                    for (var item of validSales.items) {
+                        if(item.isReturn) {
+                            var newitem = {};
+                            newitem.itemId = item.itemId;
+                            newitem.quantity = item.quantity;
+                            validTransferInDoc.items.push(newitem);
+                            isAnyTransferIn = true;
+                        }
+                    } 
+                    validTransferInDoc = new TransferInDoc(validTransferInDoc);
+                    
                     var createData = [];
-                    createData.push(this.transferOutDocManager.create(validTransferOutDoc));
+                    if(isAnyTransferOut)
+                        createData.push(this.transferOutDocManager.create(validTransferOutDoc));
+                    else
+                        createData.push(Promise.resolve(null))
+                        
+                    if(isAnyTransferIn)
+                        createData.push(this.transferOutDocManager.create(validTransferInDoc));
+                    else
+                        createData.push(Promise.resolve(null))
+                        
                     createData.push(this.collection.insert(validSales));
                     
                     Promise.all(createData)
                         .then(results => {
-                            resolve(results[1]);
+                            resolve(results[2]);
                         })
                         .catch(e => {
                             reject(e);
@@ -147,9 +182,7 @@ module.exports = class SalesManager extends BaseManager {
             else {
                 errors["date"] = "date is not valid";
             }
-            
-            
-            
+             
             for (var prop in salesDetailError) {
                 errors["salesDetail"] = salesDetailError;
                 break;
@@ -165,53 +198,54 @@ module.exports = class SalesManager extends BaseManager {
                         code: valid.code
                     }]
             });  
-            var getStore;// = this.storeManager.getSingleByIdOrDefault(sales.storeId);
-            var getBank;// = this.bankManager.getSingleByIdOrDefault(sales.salesDetail.bankId);
-            var getCardType;// = this.cardTypeManager.getSingleByIdOrDefault(sales.salesDetail.cardTypeId);
+            var getStore;
+            var getBank;
+            var getCardType;
             var getVoucher = Promise.resolve(null);
             var getItems = [];
             var getPromos = [];
             
-            if (!sales.storeId || sales.storeId == '' || this.isEmpty(sales.storeId)) {
+            if (sales.storeId && ObjectId.isValid(sales.storeId)) { 
+                getStore = this.storeManager.getSingleByIdOrDefault(sales.storeId); 
+            } 
+            else { 
                 getStore = Promise.resolve(null);
                 sales.storeId = {};
             }
-            else {
-                getStore = this.storeManager.getSingleByIdOrDefault(sales.storeId);
-            }  
-            
-            if (!sales.salesDetail.bankId || sales.salesDetail.bankId == '' || this.isEmpty(sales.salesDetail.bankId)) {
+                
+            if (sales.salesDetail.bankId && ObjectId.isValid(sales.salesDetail.bankId)) { 
+                getBank = this.bankManager.getSingleByIdOrDefault(sales.salesDetail.bankId);
+            } 
+            else { 
                 getBank = Promise.resolve(null);
                 sales.salesDetail.bankId = {};
             }
-            else {
-                getBank = this.bankManager.getSingleByIdOrDefault(sales.salesDetail.bankId);
-            }  
-            
-            if (!sales.salesDetail.cardTypeId || sales.salesDetail.cardTypeId == '' || this.isEmpty(sales.salesDetail.cardTypeId)) {
+                
+            if (sales.salesDetail.cardTypeId && ObjectId.isValid(sales.salesDetail.cardTypeId)) { 
+                getCardType = this.cardTypeManager.getSingleByIdOrDefault(sales.salesDetail.cardTypeId);
+            } 
+            else { 
                 getCardType = Promise.resolve(null);
                 sales.salesDetail.cardTypeId = {};
             }
-            else {
-                getCardType = this.cardTypeManager.getSingleByIdOrDefault(sales.salesDetail.cardTypeId);
-            }  
-                        
+                     
             if (valid.items && valid.items.length > 0) {
                 for (var item of valid.items) {  
-                    if (!item.itemId || item.itemId == '' || this.isEmpty(item.itemId)) {
+                    if (item.itemId && ObjectId.isValid(item.itemId)) { 
+                        getItems.push(this.itemManager.getSingleByIdOrDefault(item.itemId));
+                    } 
+                    else {
                         getItems.push(Promise.resolve(null));
                         item.itemId = {};
                     }
-                    else {
-                        getItems.push(this.itemManager.getSingleByIdOrDefault(item.itemId));
-                    }  
-                    if (!item.promoId || item.promoId == '' || this.isEmpty(item.promoId)) {
-                        getPromos.push(Promise.resolve(null));
-                        item.promoId = {};
-                    }
-                    else {
+                    
+                    if (item.promoId && ObjectId.isValid(item.promoId)) { 
                         getPromos.push(this.promoManager.getSingleByIdOrDefault(item.promoId));
                     } 
+                    else {
+                        getPromos.push(Promise.resolve(null));
+                        item.promoId = {};
+                    }  
                 }
             }
             else {
@@ -249,27 +283,30 @@ module.exports = class SalesManager extends BaseManager {
                     else if (parseInt(valid.discount) < 0 || parseInt(valid.discount) > 100) {
                         errors["discount"] = "discount must be greater than 0 or less than 100";
                     }  
+                    else
+                        valid.discount = parseInt(valid.discount);
                       
                     valid.totalProduct = 0;
                     valid.subTotal = 0;
                     valid.grandTotal = 0;
+                    var subTotalReturn = 0;
                     if (_items.length > 0) {
                         var itemErrors = [];
                         for (var _item of _items) {
                             var index = _items.indexOf(_item);
                             var item = valid.items[index];
                             var itemError = {};
-
-                            if (!item.itemId || item.itemId == '' || this.isEmpty(item.itemId)) {
+     
+                            if (!item.itemId || !ObjectId.isValid(item.itemId)) {
                                 itemError["itemId"] = "itemId is required";
                             }
                             else {
-                                for (var i = valid.items.indexOf(item) + 1; i < valid.items.length; i++) {
-                                    var otherItem = valid.items[i];
-                                    if (item.itemId == otherItem.itemId) {
-                                        itemError["itemId"] = "itemId already exists on another detail";
-                                    }
-                                }
+                                // for (var i = valid.items.indexOf(item) + 1; i < valid.items.length; i++) {
+                                //     var otherItem = valid.items[i];
+                                //     if (item.itemId == otherItem.itemId) {
+                                //         itemError["itemId"] = "itemId already exists on another detail";
+                                //     }
+                                // }
                             }
                             
                             if (!_item) {
@@ -281,10 +318,10 @@ module.exports = class SalesManager extends BaseManager {
                                 if(_item.size)
                                     if(_item.size.name)
                                         item.size = _item.size.name;
-                                item.price = parseInt(_item.domesticSale);
+                                //item.price = parseInt(_item.domesticSale);
                             }
-                            
-                            if (!item.promoId || item.promoId == ''|| this.isEmpty(item.promoId)) { }
+                             
+                            if (!item.promoId || !ObjectId.isValid(item.promoId)) { }
                             else {
                                 var _promo = _promos[index];
                                 if (!_promo) {
@@ -308,31 +345,31 @@ module.exports = class SalesManager extends BaseManager {
                                     }
                                     if(_promo.reward.type == "special-price") 
                                     {
-                                        //cek quantity
-                                        var quantityPaket = 0;
-                                        for(var item2 of valid.items) {
-                                            if(item.promoId.toString() == item2.promoId.toString()) {
-                                                quantityPaket = parseInt(quantityPaket) + parseInt(item2.quantity)
-                                            }
-                                        }
+                                        // //cek quantity
+                                        // var quantityPaket = 0;
+                                        // for(var item2 of valid.items) {
+                                        //     if(item.promoId.toString() == item2.promoId.toString() && !item2.isReturn) {
+                                        //         quantityPaket = parseInt(quantityPaket) + parseInt(item2.quantity)
+                                        //     }
+                                        // }
                                         
-                                        //change price
-                                        for(var item2 of valid.items) {
-                                            if(item.promoId == item2.promoId) {
-                                                for(var reward of _promo.reward.rewards) {
-                                                    if(parseInt(quantityPaket) == 1)
-                                                        item2.price = parseInt(reward.quantity1);
-                                                    else if(parseInt(quantityPaket) == 2)
-                                                        item2.price = parseInt(reward.quantity2);
-                                                    else if(parseInt(quantityPaket) == 3)
-                                                        item2.price = parseInt(reward.quantity3);
-                                                    else if(parseInt(quantityPaket) == 4)
-                                                        item2.price = parseInt(reward.quantity4);
-                                                    else if(parseInt(quantityPaket) >= 5)
-                                                        item2.price = parseInt(reward.quantity5);
-                                                }  
-                                            }
-                                        } 
+                                        // //change price
+                                        // for(var item2 of valid.items) {
+                                        //     if(item.promoId == item2.promoId && !item2.isReturn) {
+                                        //         for(var reward of _promo.reward.rewards) {
+                                        //             if(parseInt(quantityPaket) == 1)
+                                        //                 item2.price = parseInt(reward.quantity1);
+                                        //             else if(parseInt(quantityPaket) == 2)
+                                        //                 item2.price = parseInt(reward.quantity2);
+                                        //             else if(parseInt(quantityPaket) == 3)
+                                        //                 item2.price = parseInt(reward.quantity3);
+                                        //             else if(parseInt(quantityPaket) == 4)
+                                        //                 item2.price = parseInt(reward.quantity4);
+                                        //             else if(parseInt(quantityPaket) >= 5)
+                                        //                 item2.price = parseInt(reward.quantity5);
+                                        //         }  
+                                        //     }
+                                        // } 
                                     } 
                                 } 
                             } 
@@ -344,6 +381,8 @@ module.exports = class SalesManager extends BaseManager {
                             else if (parseInt(item.quantity) <= 0) {
                                 itemError["quantity"] = "quantity must be greater than 0";
                             } 
+                            else 
+                                item.quantity = parseInt(item.quantity);
                             
                             if (item.price == undefined || (item.price && item.price == '')) {
                                 itemError["price"] = "price is required";
@@ -352,7 +391,9 @@ module.exports = class SalesManager extends BaseManager {
                             else if (parseInt(item.price) < 0) {
                                 itemError["price"] = "price must be greater than 0";
                             } 
-                            
+                            else 
+                                item.price = parseInt(item.price);
+                              
                             if (item.discount1 == undefined || (item.discount1 && item.discount1 == '')) {
                                 itemError["discount1"] = "discount1 is required";
                                 item.discount1 = 0;
@@ -360,6 +401,8 @@ module.exports = class SalesManager extends BaseManager {
                             else if (parseInt(item.discount1) < 0 || parseInt(item.discount1) > 100) {
                                 itemError["discount1"] = "discount1 must be greater than 0 or less than 100";
                             } 
+                            else 
+                                item.discount1 = parseInt(item.discount1);
                             
                             if (item.discount2 == undefined || (item.discount2 && item.discount2 == '')) {
                                 itemError["discount2"] = "discount2 is required";
@@ -368,6 +411,8 @@ module.exports = class SalesManager extends BaseManager {
                             else if (parseInt(item.discount2) < 0 || parseInt(item.discount2) > 100) {
                                 itemError["discount2"] = "discount2 must be greater than 0 or less than 100";
                             } 
+                            else 
+                                item.discount2 = parseInt(item.discount2);
                             
                             if (item.discountNominal == undefined || (item.discountNominal && item.discountNominal == '')) {
                                 itemError["discountNominal"] = "discountNominal is required";
@@ -376,6 +421,8 @@ module.exports = class SalesManager extends BaseManager {
                             else if (parseInt(item.discountNominal) < 0) {
                                 itemError["discountNominal"] = "discountNominal must be greater than 0";
                             } 
+                            else 
+                                item.discountNominal = parseInt(item.discountNominal);
                             
                             if (item.margin == undefined || (item.margin && item.margin == '')) {
                                 itemError["margin"] = "margin is required";
@@ -384,6 +431,8 @@ module.exports = class SalesManager extends BaseManager {
                             else if (parseInt(item.margin) < 0 || parseInt(item.margin) > 100) {
                                 itemError["margin"] = "margin must be greater than 0 or less than 100";
                             } 
+                            else 
+                                item.margin = parseInt(item.margin);
                             
                             if (item.specialDiscount == undefined || (item.specialDiscount && item.specialDiscount == '')) {
                                 itemError["specialDiscount"] = "specialDiscount is required";
@@ -392,25 +441,33 @@ module.exports = class SalesManager extends BaseManager {
                             else if (parseInt(item.specialDiscount) < 0 || parseInt(item.specialDiscount) > 100) {
                                 itemError["specialDiscount"] = "specialDiscount must be greater than 0 or less than 100";
                             } 
+                            else 
+                                item.specialDiscount = parseInt(item.specialDiscount);
                             
-                            var total = 0;
+                            item.total = 0;
                             if(parseInt(item.quantity) > 0) {
                                 //Price
-                                total = parseInt(item.quantity) * parseInt(item.price);
+                                item.total = parseInt(item.quantity) * parseInt(item.price);
                                 //Diskon
-                                total = (total * (1 - (parseInt(item.discount1) / 100)) * (1 - (parseInt(item.discount2) / 100))) - parseInt(item.discountNominal);
+                                item.total = (item.total * (1 - (parseInt(item.discount1) / 100)) * (1 - (parseInt(item.discount2) / 100))) - parseInt(item.discountNominal);
                                 //Spesial Diskon 
-                                total = total * (1 - (parseInt(item.specialDiscount) / 100))
+                                item.total = item.total * (1 - (parseInt(item.specialDiscount) / 100))
                                 //Margin
-                                total = total * (1 - (parseInt(item.margin) / 100))
+                                item.total = item.total * (1 - (parseInt(item.margin) / 100))
                             }  
-                            valid.subTotal = parseInt(valid.subTotal) + parseInt(total);
-                            valid.totalProduct = parseInt(valid.totalProduct) + parseInt(item.quantity);
+                            if(!item.isReturn) {
+                                valid.subTotal = parseInt(valid.subTotal) + parseInt(item.total);
+                                valid.totalProduct = parseInt(valid.totalProduct) + parseInt(item.quantity);
+                            }
+                            else {
+                                subTotalReturn = subTotalReturn + parseInt(item.total);
+                            }
                             itemErrors.push(itemError);
                         }
                         var totalDiscount = parseInt(valid.subTotal) * parseInt(valid.discount) / 100; 
-                        valid.grandTotal = parseInt(valid.subTotal) - parseInt(totalDiscount);
-                        
+                        valid.grandTotal = parseInt(valid.subTotal) - parseInt(totalDiscount) - subTotalReturn;
+                        if(valid.grandTotal < 0)
+                            valid.grandTotal = 0;
                         for (var itemError of itemErrors) {
                             for (var prop in itemError) {
                                 errors.items = itemErrors;
@@ -470,6 +527,8 @@ module.exports = class SalesManager extends BaseManager {
                             else if(parseInt(valid.salesDetail.cardAmount) < 0) {
                                 salesDetailError["cardAmount"] = "cardAmount must be greater than 0";
                             }  
+                            else
+                                valid.salesDetail.cardAmount = parseInt(valid.salesDetail.cardAmount);
                         }  
                         
                         if(valid.salesDetail.paymentType.toLowerCase() == "cash" || valid.salesDetail.paymentType.toLowerCase() == "partial"){ 
@@ -480,6 +539,8 @@ module.exports = class SalesManager extends BaseManager {
                             else if(parseInt(valid.salesDetail.cashAmount) < 0) {
                                 salesDetailError["cashAmount"] = "cashAmount must be greater than 0";
                             } 
+                            else
+                                valid.salesDetail.cashAmount = parseInt(valid.salesDetail.cashAmount);
                         } 
                          
                         if(valid.salesDetail.voucher) {
@@ -490,6 +551,8 @@ module.exports = class SalesManager extends BaseManager {
                             if(parseInt(valid.salesDetail.voucher.value) > parseInt(valid.grandTotal)) {
                                 voucherError["value"] = "voucher must be less than grandTotal";
                             }
+                            else
+                                valid.salesDetail.voucher.value = parseInt(valid.salesDetail.voucher.value);
                              
                             for (var prop in voucherError) {
                                 salesDetailError["voucher"] = voucherError;
@@ -576,7 +639,7 @@ module.exports = class SalesManager extends BaseManager {
                 })
         });
     }
-    
+     
     isEmpty(obj) {
         for(var prop in obj) {
             if(obj.hasOwnProperty(prop))
@@ -602,5 +665,5 @@ module.exports = class SalesManager extends BaseManager {
                 })
         });
     }
-
+ 
 };

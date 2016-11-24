@@ -18,7 +18,7 @@ module.exports = class SPKBarangManager  {
         this.db = db;
         this.user = user;
         this.SPKDocCollection = this.db.use(map.merchandiser.SPKDoc);
-        var StorageManager = require('../inventory/storage-manager');
+        var StorageManager = require('../master/storage-manager');
         this.storageManager = new StorageManager(db, user);
 
         var ItemManager = require('../master/item-manager');

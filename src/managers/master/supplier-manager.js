@@ -7,37 +7,18 @@ var ObjectId = require('mongodb').ObjectId;
 require('mongodb-toolkit');
 var BaseManager = require('../base-manager');
 var BateeqModels = require('bateeq-models');
-var Bank = BateeqModels.master.Bank;
 var map = BateeqModels.map;
-//var generateCode = require('../../utils/code-generator');
- 
-module.exports = class BankManager extends BaseManager {
+
+var Supplier = BateeqModels.master.Supplier;
+
+
+module.exports = class SupplierManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
-        this.collection = this.db.use(map.master.Bank);
+        this.collection = this.db.use(map.master.Supplier);
     }
 
-    _createIndexes() {
-        var dateIndex = {
-            name: `ix_${map.master.Bank}__updatedDate`,
-            key: {
-                _updatedDate: -1
-            }
-        };
-
-        var codeIndex = {
-            name: `ix_${map.master.Bank}_code`,
-            key: {
-                code: 1
-            },
-            unique: true
-        };
-
-        return this.collection.createIndexes([dateIndex, codeIndex]);
-    }
-    
-    _getQuery(paging) { 
-        
+    _getQuery(paging) {  
         var basicFilter = {
             _deleted: false
         }, keywordFilter={};
@@ -65,12 +46,12 @@ module.exports = class BankManager extends BaseManager {
         return query;
     }
  
-    _validate(bank) {
+    _validate(supplier) {
         var errors = {};
         return new Promise((resolve, reject) => {
-            var valid = new Bank(bank);
+            var valid = new Supplier(supplier);
             // 1. begin: Declare promises.
-            var getBank = this.collection.singleOrDefault({
+            var getsupplier = this.collection.singleOrDefault({
                 "$and": [{
                     _id: {
                         '$ne': new ObjectId(valid._id)
@@ -82,15 +63,16 @@ module.exports = class BankManager extends BaseManager {
             // 1. end: Declare promises.
 
             // 2. begin: Validation.
-            Promise.all([getBank])
+            Promise.all([getsupplier])
                 .then(results => {
-                    var _bank = results[0];
+                    var _supplier = results[0];
 
                     if (!valid.code || valid.code == '')
                         errors["code"] = "code is required";
-                    else if (_bank) {
+                    else if (_supplier) {
                         errors["code"] = "code already exists";
-                    } 
+                    }
+
                     if (!valid.name || valid.name == '')
                         errors["name"] = "name is required"; 
 

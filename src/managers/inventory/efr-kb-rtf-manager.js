@@ -19,7 +19,7 @@ module.exports = class PusatReturTokoKirimBarangReturManager {
         this.db = db;
         this.user = user;
         this.transferOutDocCollection = this.db.use(map.inventory.TransferOutDoc);
-        var StorageManager = require('./storage-manager');
+        var StorageManager = require('../master/storage-manager');
         this.storageManager = new StorageManager(db, user);
 
         var ItemManager = require('../master/item-manager');

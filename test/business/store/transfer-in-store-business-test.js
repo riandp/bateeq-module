@@ -1,53 +1,80 @@
 var should = require('should');
-var helper = require('../helper');
+var helper = require('../../helper');
 var validate = require('bateeq-models').validator.inventory;
 var manager;
 var testData;
 
-function getData() {
-    var source = testData.storages["UT-BJB"];
-    var destination = testData.storages["UT-FNG"];
+function getData() { 
+    var store = testData.stores["ST-BJB"]; 
+    var source = store.storage;
+    var destination = store.storage;
     var variant = testData.items["UT-AV1"];
+    var variant1 = testData.finishedGoods["UT-FG1"];
+    var variant2 = testData.finishedGoods["UT-FG2"];
+    var variant3 = testData.finishedGoods["UT-FG3"];
 
-    var TransferOutDoc = require('bateeq-models').inventory.TransferOutDoc;
-    var TransferOutItem = require('bateeq-models').inventory.TransferOutItem;
-    var transferOutDoc = new TransferOutDoc();
+    var TransferInDoc = require('bateeq-models').inventory.TransferInDoc;
+    var TransferInItem = require('bateeq-models').inventory.TransferInItem;
+    var transferInDoc = new TransferInDoc();
 
     var now = new Date();
     var stamp = now / 1000 | 0;
     var code = stamp.toString(36);
 
-    transferOutDoc.code = code;
-    transferOutDoc.date = now;
+    transferInDoc.code = code;
+    transferInDoc.date = now;
 
-    transferOutDoc.sourceId = source._id;
-    transferOutDoc.destinationId = destination._id;
+    transferInDoc.sourceId = source._id;
+    transferInDoc.destinationId = destination._id;
 
-    transferOutDoc.reference = `reference[${code}]`;
+    transferInDoc.reference = `reference[${code}]`;
 
-    transferOutDoc.remark = `remark for ${code}`;
+    transferInDoc.remark = `remark for ${code}`;
 
-    transferOutDoc.items.push(new TransferOutItem({
+    transferInDoc.items.push(new TransferInItem({
         itemId: variant._id,
+        item:variant,
         quantity: 5,
-        remark: 'transferOutDoc.test'
+        remark: 'transferInDoc.test'
+    }));
+    
+    transferInDoc.items.push(new TransferInItem({
+        itemId: variant1._id,
+        item: variant1,
+        quantity: 10,
+        remark: 'transferInDoc.test'
+    }));
+    
+    transferInDoc.items.push(new TransferInItem({
+        itemId: variant2._id,
+        item: variant2,
+        quantity: 10,
+        remark: 'transferInDoc.test'
+    }));
+    
+    transferInDoc.items.push(new TransferInItem({
+        itemId: variant3._id,
+        item: variant3,
+        quantity: 10,
+        remark: 'transferInDoc.test'
     }));
 
-    return transferOutDoc;
+    return transferInDoc;
 }
 
 before('#00. connect db', function(done) {
     helper.getDb()
         .then(db => {
-            var data = require("../data");
+            var data = require("../../data");
             data(db)
                 .then(result => {
 
-                    var TransferOutDocManager = require('../../src/managers/inventory/transfer-out-doc-manager');
-                    manager = new TransferOutDocManager(db, {
+                    var TransferInDocManager = require('../../../src/managers/inventory/transfer-in-doc-manager');
+                    manager = new TransferInDocManager(db, {
                         username: 'unit-test'
                     });
                     testData = result;
+
                     done();
                 })
                 .catch(e => {
@@ -70,7 +97,7 @@ it('#01. should success when create new data', function(done) {
         })
         .catch(e => {
             done(e);
-        })
+        });
 });
 
 var createdData;
@@ -79,13 +106,13 @@ it(`#02. should success when get created data with id`, function(done) {
             _id: createdId
         })
         .then(data => {
-            validate.transferOutDoc(data);
+            validate.transferInDoc(data);
             createdData = data;
             done();
         })
         .catch(e => {
             done(e);
-        })
+        });
 });
 
 it(`#03. should success when update created data`, function(done) {
@@ -93,8 +120,8 @@ it(`#03. should success when update created data`, function(done) {
     createdData.reference += '[updated]';
     createdData.remark += '[updated]';
 
-    var TransferOutItem = require('bateeq-models').inventory.TransferOutItem;
-    // createdData.items.push(new TransferOutItem());
+    var TransferInItem = require('bateeq-models').inventory.TransferInItem;
+    // createdData.items.push(new TransferInItem());
 
     manager.update(createdData)
         .then(id => {
@@ -111,10 +138,10 @@ it(`#04. should success when get updated data with id`, function(done) {
             _id: createdId
         })
         .then(data => {
-            validate.transferOutDoc(data);
+            validate.transferInDoc(data);
             data.remark.should.equal(createdData.remark);
             data.reference.should.equal(createdData.reference);
-            data.items.length.should.equal(1);
+            data.items.length.should.equal(4);
             done();
         })
         .catch(e => {
@@ -138,7 +165,7 @@ it(`#06. should _deleted=true`, function(done) {
             _id: createdId
         })
         .then(data => {
-            validate.transferOutDoc(data);
+            validate.transferInDoc(data);
             data._deleted.should.be.Boolean();
             data._deleted.should.equal(true);
             done();
@@ -158,7 +185,13 @@ it('#07. should error when create new data with same code', function(done) {
             done("Should not be able to create data with same code");
         })
         .catch(e => {
-            done();
+            try {
+                e.errors.should.have.property('code');
+                done();
+            }
+            catch (xe) {
+                done(xe);
+            };
         })
 });
 
@@ -179,7 +212,7 @@ it('#08. should error with property items minimum one', function(done) {
             catch (ex) {
                 done(ex);
             }
-        })
+        });
 });
 
 it('#09. should error with property items must be greater one', function(done) {
@@ -209,5 +242,5 @@ it('#09. should error with property items must be greater one', function(done) {
             catch (ex) {
                 done(ex);
             }
-        })
+        });
 });

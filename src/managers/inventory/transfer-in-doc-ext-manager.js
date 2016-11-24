@@ -17,7 +17,7 @@ module.exports = class TransferInDocExtManager {
         this.db = db;
         this.user = user;
         this.transferInDocCollection = this.db.use(map.inventory.TransferInDoc);
-        var StorageManager = require('./storage-manager');
+        var StorageManager = require('../master/storage-manager');
         this.storageManager = new StorageManager(db, user);
 
         var ItemManager = require('../master/item-manager');
@@ -26,7 +26,7 @@ module.exports = class TransferInDocExtManager {
         var InventoryManager = require('./inventory-manager');
         this.inventoryManager = new InventoryManager(db, user);
 
-         var SupplierManager = require('./supplier-manager');
+         var SupplierManager = require('../master/supplier-manager');
         this.supplierManager = new SupplierManager(db, user);
     }
 

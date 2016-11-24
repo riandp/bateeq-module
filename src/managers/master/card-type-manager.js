@@ -23,7 +23,7 @@ module.exports = class CardTypeManager extends BaseManager {
             key: {
                 _updatedDate: -1
             }
-        }
+        };
 
         var codeIndex = {
             name: `ix_${map.master.CardType}_code`,
@@ -31,19 +31,18 @@ module.exports = class CardTypeManager extends BaseManager {
                 code: 1
             },
             unique: true
-        }
+        };
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
     
-    _getQuery(paging) { 
-        var deleted = {
-            _deleted: false
-        };
+    _getQuery(paging) {  
         
-        var query = paging.filter ? {
-            '$and': [paging.filter, deleted]
-        } : deleted; 
+        var basicFilter = {
+            _deleted: false
+        }, keywordFilter={};
+        
+        var query = {};
 
         if (paging.keyword) {
             var regex = new RegExp(paging.keyword, "i");
@@ -57,13 +56,13 @@ module.exports = class CardTypeManager extends BaseManager {
                     '$regex': regex
                 }
             };
-            var $or = {
+            
+            keywordFilter = {
                 '$or': [filterCode, filterName]
-            };
-
-            query['$and'].push($or);
+            }; 
         }
-        return query; 
+        query = { '$and': [basicFilter, paging.filter, keywordFilter] };
+        return query;
     }
     
     _validate(cardType) {
@@ -107,7 +106,7 @@ module.exports = class CardTypeManager extends BaseManager {
                 })
                 .catch(e => {
                     reject(e);
-                })
+                });
         });
     }
 };
