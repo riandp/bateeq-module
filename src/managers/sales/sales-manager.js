@@ -585,4 +585,22 @@ module.exports = class SalesManager extends BaseManager {
         return JSON.stringify(obj) === JSON.stringify({});
     }
 
+    update(salesDoc) {
+        return new Promise((resolve, reject) => {
+            this._validate(salesDoc)
+                .then(validSalesDoc => {
+                    this.collection.update(validSalesDoc)
+                        .then(id => {
+                            resolve(id);
+                        })
+                        .catch(e => {
+                            reject(e);
+                        })
+                })
+                .catch(e => {
+                    reject(e);
+                })
+        });
+    }
+
 };
