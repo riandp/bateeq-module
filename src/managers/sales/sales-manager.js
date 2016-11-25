@@ -621,9 +621,9 @@ module.exports = class SalesManager extends BaseManager {
                             if (valid.salesDetail.voucher.value == undefined || (valid.salesDetail.voucher.value && valid.salesDetail.voucher.value == '')) {
                                 valid.salesDetail.voucher.value = 0;
                             }
-                            if (parseInt(valid.salesDetail.voucher.value) > parseInt(valid.grandTotal)) {
-                                voucherError["value"] = "voucher must be less than grandTotal";
-                            }
+                            // if (parseInt(valid.salesDetail.voucher.value) > parseInt(valid.grandTotal)) {
+                            //     voucherError["value"] = "voucher must be less than grandTotal";
+                            // }
                             else
                                 valid.salesDetail.voucher.value = parseInt(valid.salesDetail.voucher.value);
 
