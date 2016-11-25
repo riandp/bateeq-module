@@ -97,11 +97,11 @@ module.exports = class SalesReturnManager extends BaseManager {
                 .then(validSalesVM => {                     
                     //membuat model sales
                     var validSales = new Sales(validSalesVM); 
+                    validSales.isReturn = true;
                     var newItems = [];
                     for(var item of validSales.items) {
                         item.isReturn = true;
-                        var salesItem = new SalesItem(item);
-                        for(var newItem of salesItem.returnItems) {
+                        for(var newItem of item.returnItems) {
                             var newSalesItem = new SalesItem(newItem);
                             newSalesItem.isRetur = false;
                             newSalesItem.returnItems = [];
@@ -303,6 +303,7 @@ module.exports = class SalesReturnManager extends BaseManager {
                             if (_items.length > 0) {
                                 var itemErrors = [];
                                 
+                                var _returnItemIndex = 0;
                                 for (var item of valid.items) {
                                     var index = valid.items.indexOf(item);
                                     var _item = _items[index];
@@ -438,7 +439,6 @@ module.exports = class SalesReturnManager extends BaseManager {
                                     else 
                                         item.specialDiscount = parseInt(item.specialDiscount);
                                     
-                                    var _returnItemIndex = 0;
                                     if (item.returnItems && item.returnItems.length > 0) {
                                         var returnItemErrors = [];
                                         for (var returnItem of item.returnItems) {  
@@ -500,6 +500,8 @@ module.exports = class SalesReturnManager extends BaseManager {
                                                                 break;
                                                             }
                                                         }
+                                                        if(isGetPromo)
+                                                            returnItemError["itemId"] = "Item not in same promo"; 
                                                     } 
                                                     if(!isGetPromo) {
                                                         //langsung copy promo aja
