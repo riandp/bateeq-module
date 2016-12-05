@@ -5,7 +5,7 @@ var ObjectId = require('mongodb').ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
-var BaseManager = require('../base-manager');
+var BaseManager = require('module-toolkit').BaseManager;
 var BateeqModels = require('bateeq-models');
 var map = BateeqModels.map;
 
@@ -15,15 +15,31 @@ var Module = BateeqModels.master.Module;
 module.exports = class ModuleManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
-        this.collection = this.db.use(map.master.Module); 
-    } 
+        this.collection = this.db.use(map.master.Module);
+    }
 
-    _getQuery(paging) { 
-        
+    getByCode(code) {
+        return new Promise((resolve, reject) => {
+            var query = {
+                code: code,
+                _deleted: false
+            };
+            this.getSingleByQuery(query)
+                .then(module => {
+                    resolve(module);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    _getQuery(paging) {
+
         var basicFilter = {
             _deleted: false
-        }, keywordFilter={};
-        
+        }, keywordFilter = {};
+
         var query = {};
 
         if (paging.keyword) {
@@ -38,17 +54,17 @@ module.exports = class ModuleManager extends BaseManager {
                     '$regex': regex
                 }
             };
-            
+
             keywordFilter = {
                 '$or': [filterCode, filterName]
-            }; 
+            };
         }
         query = { '$and': [basicFilter, paging.filter, keywordFilter] };
         return query;
     }
 
     _validate(module) {
-         var errors = {};
+        var errors = {};
         return new Promise((resolve, reject) => {
             var valid = new Module(module);
             // 1. begin: Declare promises.
@@ -58,8 +74,8 @@ module.exports = class ModuleManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
             // 1. end: Declare promises.
 
@@ -75,11 +91,11 @@ module.exports = class ModuleManager extends BaseManager {
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required"; 
+                        errors["name"] = "name is required";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 
@@ -90,5 +106,5 @@ module.exports = class ModuleManager extends BaseManager {
                     reject(e);
                 })
         });
-    } 
+    }
 };

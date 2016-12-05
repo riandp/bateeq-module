@@ -292,25 +292,13 @@ module.exports = class InventoryMovementManager {
         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = inventoryMovement;
-            // 1. begin: Declare promises.
-            var getInventoryMovementDoc = this.inventoryMovementCollection.singleOrDefault({
-                "$and": [{
-                    _id: {
-                        '$ne': new ObjectId(valid._id)
-                    }
-                }, {
-                        //code: valid.code
-                    }]
-            });
-            // 1. end: Declare promises.
             var getStorage = this.storageManager.getSingleById(inventoryMovement.storageId);
             var getItem = this.itemManager.getSingleById(inventoryMovement.itemId);
  
-            Promise.all([getInventoryMovementDoc, getStorage, getItem])
+            Promise.all([getStorage, getItem])
                 .then(results => {
-                    var _inventoryMovement = results[0];
-                    var storage = results[1];
-                    var item = results[2];
+                    var storage = results[0];
+                    var item = results[1];
 
                     if (!valid.storageId || valid.storageId == '')
                         errors["storageId"] = "storageId is required";
@@ -361,7 +349,7 @@ module.exports = class InventoryMovementManager {
                     
                      // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
                     valid.stamp(this.user.username, 'manager');

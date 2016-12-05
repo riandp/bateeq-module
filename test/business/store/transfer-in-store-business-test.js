@@ -1,8 +1,10 @@
 var should = require('should');
 var helper = require('../../helper');
 var validate = require('bateeq-models').validator.inventory;
+var generateCode = require('../../../src/utils/code-generator');
 var manager;
 var testData;
+var generateCode = require('../../../src/utils/code-generator');
 
 function getData() { 
     var store = testData.stores["ST-BJB"]; 
@@ -18,10 +20,9 @@ function getData() {
     var transferInDoc = new TransferInDoc();
 
     var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
-    transferInDoc.code = code;
+    transferInDoc.code = generateCode("store-business");;
     transferInDoc.date = now;
 
     transferInDoc.sourceId = source._id;
@@ -34,28 +35,28 @@ function getData() {
     transferInDoc.items.push(new TransferInItem({
         itemId: variant._id,
         item:variant,
-        quantity: 5,
+        quantity: 100,
         remark: 'transferInDoc.test'
     }));
     
     transferInDoc.items.push(new TransferInItem({
         itemId: variant1._id,
         item: variant1,
-        quantity: 10,
+        quantity: 100,
         remark: 'transferInDoc.test'
     }));
     
     transferInDoc.items.push(new TransferInItem({
         itemId: variant2._id,
         item: variant2,
-        quantity: 10,
+        quantity: 100,
         remark: 'transferInDoc.test'
     }));
     
     transferInDoc.items.push(new TransferInItem({
         itemId: variant3._id,
         item: variant3,
-        quantity: 10,
+        quantity: 100,
         remark: 'transferInDoc.test'
     }));
 

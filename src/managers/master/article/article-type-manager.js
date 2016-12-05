@@ -101,7 +101,7 @@ module.exports = class ArticleTypeManager {
                 });
         });
     }
-    
+
     getSingleByIdOrDefault(id) {
         return new Promise((resolve, reject) => {
             if (id === '')
@@ -132,7 +132,7 @@ module.exports = class ArticleTypeManager {
                 });
         })
     }
-    
+
     getSingleByQueryOrDefault(query) {
         return new Promise((resolve, reject) => {
             this.articleTypeCollection
@@ -201,7 +201,7 @@ module.exports = class ArticleTypeManager {
                 })
         });
     }
- 
+
     _validate(articleType) {
         var errors = {};
         return new Promise((resolve, reject) => {
@@ -213,8 +213,8 @@ module.exports = class ArticleTypeManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
             // 1. end: Declare promises.
 
@@ -230,11 +230,11 @@ module.exports = class ArticleTypeManager {
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required"; 
+                        errors["name"] = "name is required";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 

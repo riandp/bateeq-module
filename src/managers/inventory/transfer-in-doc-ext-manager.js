@@ -306,7 +306,7 @@ module.exports = class TransferInDocExtManager {
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
                     valid = new TransferInDoc(valid);

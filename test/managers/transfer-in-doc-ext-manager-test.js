@@ -1,8 +1,10 @@
 var should = require('should');
 var helper = require('../helper');
 var validate = require('bateeq-models').validator.inventory;
+var generateCode = require('../../src/utils/code-generator');
 var manager;
 var testData;
+var generateCode = require('../../src/utils/code-generator');
 
 function getData() {
     var source = testData.suppliers["UT-S01"];
@@ -15,10 +17,9 @@ function getData() {
     var transferInDoc = new TransferInDoc();
 
     var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
-    transferInDoc.code = code;
+    transferInDoc.code = generateCode("transfer-in-doc");;
     transferInDoc.date = now;
 
     transferInDoc.sourceId = source._id;

@@ -1,6 +1,7 @@
 var should = require('should');
 var helper = require('../helper');
 var validate = require('bateeq-models').validator.inventory;
+var generateCode = require('../../src/utils/code-generator');
 var manager;
 var testData;
 
@@ -16,8 +17,7 @@ function getData() {
 
                 var expeditionDoc = {};
                 var now = new Date();
-                var stamp = now / 1000 | 0;
-                var code = stamp.toString(36);
+                var code = generateCode('UnitTest');
 
                 for (var item of spk.items) {
                     item.quantitySend = item.quantity;

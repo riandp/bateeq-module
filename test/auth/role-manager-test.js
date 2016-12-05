@@ -1,6 +1,7 @@
 var helper = require("../helper");
 var RoleManager = require("../../src/managers/auth/role-manager");
 var validateRole = require('bateeq-models').validator.auth.role;
+var generateCode = require('../../src/utils/code-generator');
 var instanceManager = null;
 require("should");
 
@@ -8,9 +9,7 @@ function getData() {
     var Role = require('bateeq-models').auth.Role;
     var role = new Role();
 
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
     role.code = code;
     role.name = `name[${code}]`;

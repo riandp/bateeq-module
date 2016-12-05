@@ -1,7 +1,9 @@
 var should = require('should');
 var helper = require('../helper');
+var generateCode = require('../../src/utils/code-generator');
 var manager;
 var testData;
+var generateCode = require('../../src/utils/code-generator');
 
 function getData() {
     var store = testData.stores["ST-BJB"]; 
@@ -15,10 +17,9 @@ function getData() {
     var sales = new Sales();
 
     var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
-    sales.code = code;
+    sales.code = generateCode("sales");;
     sales.date = now;
     sales.discount = 0;
     sales.reference = '';
@@ -52,6 +53,8 @@ function getData() {
         voucher : {},
         bankId : bank._id,
         bank : bank,
+        bankCardId : bank._id,
+        bankCard : bank,
         cardTypeId : cardType._id,
         cardType : cardType,                
         card : 'Credit', //Debit | Credit
@@ -76,10 +79,9 @@ function getDataCash() {
     var sales = new Sales();
 
     var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
-    sales.code = code;
+    sales.code = generateCode("sales-cash");;
     sales.date = now;
     sales.discount = 0;
     sales.reference = '';
@@ -113,6 +115,8 @@ function getDataCash() {
         voucher : {},
         bankId : {},
         bank : {},
+        bankCardId : {},
+        bankCard : {},
         cardTypeId : {},
         cardType : {},                
         card : '', //Debit | Credit
@@ -137,10 +141,9 @@ function getDataPartial() {
     var sales = new Sales();
 
     var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
-    sales.code = code;
+    sales.code = generateCode("sales-partial");;
     sales.date = now;
     sales.discount = 0;
     sales.reference = '';
@@ -174,6 +177,8 @@ function getDataPartial() {
         voucher : {},
         bankId : bank._id,
         bank : bank,
+        bankCardId : bank._id,
+        bankCard : bank,
         cardTypeId : cardType._id,
         cardType : cardType,                
         card : 'Credit', //Debit | Credit
@@ -284,17 +289,16 @@ it(`#06. should _deleted=true`, function(done) {
         })
 });
  
-it('#07. should error with property items, storeId, date, paymentType ', function(done) {
+it('#07. should error with property items, storeId, date ', function(done) {
     manager.create({ date : '' })
         .then(id => {
-            done("Should not be error with property items, storeId, paymentType");
+            done("Should not be error with property items, storeId, date");
         })
         .catch(e => {
             try {
                 e.errors.should.have.property('items');
                 e.errors.should.have.property('storeId');
                 e.errors.should.have.property('date');
-                e.errors.salesDetail.should.have.property('paymentType');
                 done();
             }
             catch (ex) {
@@ -617,20 +621,20 @@ it('#22. should error with property SalesDetail PaymentType:Partial CashAmount+C
         })
 });
  
-it('#23. should error with property SalesDetail Voucher is Bigger than GrandTotal ', function(done) {
-    var data = getData();
-    data.salesDetail.voucher.value = 9999999999999;
-    manager.create(data)
-        .then(id => {
-            done("Should not be error with property SalesDetail Voucher is Bigger than GrandTotal");
-        })
-        .catch(e => {
-            try { 
-                e.errors.salesDetail.voucher.should.have.property('value'); 
-                done();
-            }
-            catch (ex) {
-                done(ex);
-            }
-        })
-});
+// it('#23. should error with property SalesDetail Voucher is Bigger than GrandTotal ', function(done) {
+//     var data = getData();
+//     data.salesDetail.voucher.value = 9999999999999;
+//     manager.create(data)
+//         .then(id => {
+//             done("Should not be error with property SalesDetail Voucher is Bigger than GrandTotal");
+//         })
+//         .catch(e => {
+//             try { 
+//                 e.errors.salesDetail.voucher.should.have.property('value'); 
+//                 done();
+//             }
+//             catch (ex) {
+//                 done(ex);
+//             }
+//         })
+// });

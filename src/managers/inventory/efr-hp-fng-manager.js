@@ -376,7 +376,7 @@ module.exports = class FinishedGoodsManager {
                                                 finishingError["quantity"] = "quantity must be greater than 0";
                                             }
                                             else {
-                                                getItemComponent = this.inventoryManager.getByStorageIdAndArticleVarianId(valid.sourceId, finishing.itemId);
+                                                getItemComponent = this.inventoryManager.getByStorageIdAndItemId(valid.sourceId, finishing.itemId);
                                             }
                                             getItemComponents.push(getItemComponent)
                                             finishingErrors.push(finishingError);

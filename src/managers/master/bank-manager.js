@@ -5,12 +5,12 @@ var ObjectId = require('mongodb').ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
-var BaseManager = require('../base-manager');
+var BaseManager = require('module-toolkit').BaseManager;
 var BateeqModels = require('bateeq-models');
 var Bank = BateeqModels.master.Bank;
 var map = BateeqModels.map;
 //var generateCode = require('../../utils/code-generator');
- 
+
 module.exports = class BankManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
@@ -35,13 +35,13 @@ module.exports = class BankManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
-    
-    _getQuery(paging) { 
-        
+
+    _getQuery(paging) {
+
         var basicFilter = {
             _deleted: false
-        }, keywordFilter={};
-        
+        }, keywordFilter = {};
+
         var query = {};
 
         if (paging.keyword) {
@@ -56,15 +56,15 @@ module.exports = class BankManager extends BaseManager {
                     '$regex': regex
                 }
             };
-            
+
             keywordFilter = {
                 '$or': [filterCode, filterName]
-            }; 
+            };
         }
         query = { '$and': [basicFilter, paging.filter, keywordFilter] };
         return query;
     }
- 
+
     _validate(bank) {
         var errors = {};
         return new Promise((resolve, reject) => {
@@ -76,8 +76,8 @@ module.exports = class BankManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
             // 1. end: Declare promises.
 
@@ -90,13 +90,13 @@ module.exports = class BankManager extends BaseManager {
                         errors["code"] = "code is required";
                     else if (_bank) {
                         errors["code"] = "code already exists";
-                    } 
+                    }
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required"; 
+                        errors["name"] = "name is required";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 

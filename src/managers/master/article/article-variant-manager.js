@@ -200,7 +200,7 @@ module.exports = class ArticleVariantManager {
                 })
         });
     }
- 
+
     _validate(articleVariant) {
         var errors = {};
         return new Promise((resolve, reject) => {
@@ -212,8 +212,8 @@ module.exports = class ArticleVariantManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
             // 1. end: Declare promises.
 
@@ -225,14 +225,14 @@ module.exports = class ArticleVariantManager {
                     if (!valid.code || valid.code == '')
                         errors["code"] = "code is required";
                     else if (_articleVariant)
-                        errors["code"] = "code already exists"; 
-                        
+                        errors["code"] = "code already exists";
+
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required";  
-                        
+                        errors["name"] = "name is required";
+
                     if (!valid.size || valid.size == '')
-                        errors["size"] = "size is required";  
-                        
+                        errors["size"] = "size is required";
+
                     if (valid.domesticCOGS == undefined || (valid.domesticCOGS && valid.domesticCOGS == '')) {
                         errors["domesticCOGS"] = "domesticCOGS is required";
                     }
@@ -250,13 +250,13 @@ module.exports = class ArticleVariantManager {
                     }
                     else if (parseInt(valid.domesticRetail) < 0) {
                         errors["domesticRetail"] = "domesticRetail must be greater with 0";
-                    } 
+                    }
                     if (valid.domesticSale == undefined || (valid.domesticSale && valid.domesticSale == '')) {
                         errors["domesticSale"] = "domesticSale is required";
                     }
                     else if (parseInt(valid.domesticSale) < 0) {
                         errors["domesticSale"] = "domesticSale must be greater with 0";
-                    } 
+                    }
                     if (valid.internationalCOGS == undefined || (valid.internationalCOGS && valid.internationalCOGS == '')) {
                         errors["internationalCOGS"] = "internationalCOGS is required";
                     }
@@ -280,11 +280,11 @@ module.exports = class ArticleVariantManager {
                     }
                     else if (parseInt(valid.internationalSale) < 0) {
                         errors["internationalSale"] = "internationalSale must be greater with 0";
-                    } 
+                    }
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 

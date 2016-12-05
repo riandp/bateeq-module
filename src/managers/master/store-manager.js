@@ -5,7 +5,7 @@ var ObjectId = require('mongodb').ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
-var BaseManager = require('../base-manager');
+var BaseManager = require('module-toolkit').BaseManager;
 var StorageManager = require('../master/storage-manager');
 var BateeqModels = require('bateeq-models');
 var Store = BateeqModels.master.Store;
@@ -39,11 +39,11 @@ module.exports = class StoreManager extends BaseManager {
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
 
-    _getQuery(paging) {  
+    _getQuery(paging) {
         var basicFilter = {
             _deleted: false
-        }, keywordFilter={};
-        
+        }, keywordFilter = {};
+
         var query = {};
 
         if (paging.keyword) {
@@ -58,10 +58,10 @@ module.exports = class StoreManager extends BaseManager {
                     '$regex': regex
                 }
             };
-            
+
             keywordFilter = {
                 '$or': [filterCode, filterName]
-            }; 
+            };
         }
         query = { '$and': [basicFilter, paging.filter, keywordFilter] };
         return query;
@@ -100,23 +100,23 @@ module.exports = class StoreManager extends BaseManager {
                         errors["code"] = "code already exists";
                     }
 
-                    if (!valid.name || valid.name == '') 
-                        errors["name"] = "name is required"; 
-                    
+                    if (!valid.name || valid.name == '')
+                        errors["name"] = "name is required";
+
                     if (!valid.address || valid.address == '')
                         errors["address"] = "address is required";
-                    
+
                     if (!valid.phone || valid.phone == '')
                         errors["phone"] = "phone is required";
-                        
+
                     if (!valid.salesCapital)
                         errors["salesCapital"] = "Sales Capital is required";
-                    else if(valid.salesCapital <= 0)  
+                    else if (valid.salesCapital <= 0)
                         errors["salesCapital"] = "Sales Capital must be greater than 0";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 

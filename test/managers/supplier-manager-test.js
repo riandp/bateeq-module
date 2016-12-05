@@ -1,15 +1,14 @@
 var should = require('should');
 var helper = require('../helper');
 var validate = require('bateeq-models').validator.master;
+var generateCode = require('../../src/utils/code-generator');
 var manager;
 
 function getData() {
     var Supplier = require('bateeq-models').master.Supplier;
     var supplier = new Supplier();
 
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
     supplier.code = code;
     supplier.name = `name[${code}]`;

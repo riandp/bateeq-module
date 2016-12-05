@@ -5,6 +5,7 @@ var ObjectId = require('mongodb').ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
+var BaseManager = require('module-toolkit').BaseManager;
 var BateeqModels = require('bateeq-models');
 var map = BateeqModels.map;
 var generateCode = require('../../utils/code-generator');
@@ -14,10 +15,9 @@ var TransferInItem = BateeqModels.inventory.TransferInItem;
 
 const moduleId = "EFR-TB/BBT";
 
-module.exports = class TokoTerimaBarangBaruManager {
+module.exports = class TokoTerimaBarangBaruManager extends BaseManager {
     constructor(db, user) {
-        this.db = db;
-        this.user = user;
+        super(db, user);
         this.transferInDocCollection = this.db.use(map.inventory.TransferInDoc);
         this.spkDocCollection = this.db.use(map.merchandiser.SPKDoc);
 
@@ -104,7 +104,7 @@ module.exports = class TokoTerimaBarangBaruManager {
                 'code': {
                     '$regex': regex
                 },
-                'expeditionDocumentId': { "$ne": {} }
+                // 'expeditionDocumentId': { "$ne": {} }
             };
 
             var isReceived = {
@@ -319,13 +319,13 @@ module.exports = class TokoTerimaBarangBaruManager {
                                 break;
                         }
                         for (var prop in errors) {
-                            var ValidationError = require('../../validation-error');
+                            var ValidationError = require('module-toolkit').ValidationError;
                             reject(new ValidationError('data does not pass validation', errors));
                         }
                     }
                     else {
                         errors["reference"] = "reference not found";
-                        var ValidationError = require('../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
                     resolve(transferInDoc);

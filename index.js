@@ -21,7 +21,7 @@ inventoryMap.set("efr-tb-brd", require('./src/managers/inventory/efr-tb-brd-mana
 inventoryMap.set("efr-tb-brt", require('./src/managers/inventory/efr-tb-brt-manager'));
 inventoryMap.set("efr-tb-sab", require('./src/managers/inventory/efr-tb-sab-manager'));
 inventoryMap.set("efr-tb-alt", require('./src/managers/inventory/efr-tb-alt-manager'));
-inventoryMap.set("efr-hp-fng", require('./src/managers/inventory/efr-hp-fng-manager')); 
+inventoryMap.set("efr-hp-fng", require('./src/managers/inventory/efr-hp-fng-manager'));
 
 var merchandiserMap = new Map();
 merchandiserMap.set("efr-pk", require('./src/managers/merchandiser/efr-pk-manager'));
@@ -34,7 +34,7 @@ module.exports = {
         AccountManager: require("./src/managers/auth/account-manager"),
         RoleManager: require("./src/managers/auth/role-manager")
     },
-    inventory: { 
+    inventory: {
         TransferInDocManager: inventoryMap.get("transfer-in-doc"),
         TransferOutDocManager: inventoryMap.get("transfer-out-doc"),
         InventoryManager: inventoryMap.get("inventory"),
@@ -58,7 +58,7 @@ module.exports = {
         FinishingTerimaKomponenManager: inventoryMap.get("efr-tb-sab"),
         TransferInDocExtManager: inventoryMap.get("transfer-in-doc-ext"),
         map: inventoryMap
-    }, 
+    },
     merchandiser: {
         SPKManager: require('./src/managers/merchandiser/efr-pk-manager'),
         SPKBarangJadiManager: require('./src/managers/merchandiser/efr-pk-pbj-manager'),
@@ -72,7 +72,7 @@ module.exports = {
         CardTypeManager: require('./src/managers/master/card-type-manager'),
         StoreManager: require('./src/managers/master/store-manager'),
         ItemManager: require('./src/managers/master/item-manager'),
-        SupplierManager: require('./src/managers/master/supplier-manager'), 
+        SupplierManager: require('./src/managers/master/supplier-manager'),
         StorageManager: require('./src/managers/master/storage-manager'),
         FinishedGoodsManager: require('./src/managers/master/finished-goods-manager'),
         MaterialManager: require('./src/managers/master/material-manager')
@@ -81,6 +81,5 @@ module.exports = {
         SalesManager: require('./src/managers/sales/sales-manager'),
         SalesReturnManager: require('./src/managers/sales/sales-return-manager'),
         PromoManager: require('./src/managers/sales/promo-manager')
-    },
-    ValidationError: require('./src/validation-error')
+    }
 }

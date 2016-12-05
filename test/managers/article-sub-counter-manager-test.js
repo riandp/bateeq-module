@@ -1,15 +1,14 @@
 var should = require('should');
 var helper = require('../helper');
 var validate = require('bateeq-models').validator.master.article;
+var generateCode = require('../../src/utils/code-generator');
 var manager;
 
 function getData() {
     var ArticleSubCounter = require('bateeq-models').master.article.ArticleSubCounter;
     var articleSubCounter = new ArticleSubCounter();
 
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
     articleSubCounter.code = code;
     articleSubCounter.name = `name[${code}]`;

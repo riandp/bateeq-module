@@ -5,7 +5,7 @@ var ObjectId = require('mongodb').ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
-var BaseManager = require('../base-manager');
+var BaseManager = require('module-toolkit').BaseManager;
 var ComponentHelper = require('./component-helper');
 
 var BateeqModels = require('bateeq-models');
@@ -117,11 +117,30 @@ module.exports = class ItemManager extends BaseManager {
                 })
         });
     }
-    _getQuery(paging) { 
+
+    getByCode(code) {
+        return new Promise((resolve, reject) => {
+            if (code === '')
+                resolve(null);
+            var query = {
+                code: code,
+                _deleted: false
+            };
+            this.collection.singleOrDefault(query)
+                .then(item => {
+                    resolve(item);
+                })
+                .catch(e => {
+                    reject(e);
+                });
+        });
+    }
+
+    _getQuery(paging) {
         var basicFilter = {
             _deleted: false
-        }, keywordFilter={};
-        
+        }, keywordFilter = {};
+
         var query = {};
 
         if (paging.keyword) {
@@ -136,10 +155,10 @@ module.exports = class ItemManager extends BaseManager {
                     '$regex': regex
                 }
             };
-            
+
             keywordFilter = {
                 '$or': [filterCode, filterName]
-            }; 
+            };
         }
         query = { '$and': [basicFilter, paging.filter, keywordFilter] };
         return query;
@@ -182,7 +201,7 @@ module.exports = class ItemManager extends BaseManager {
 
                             // 2c. begin: check if data has any error, reject if it has.
                             for (var prop in errors) {
-                                var ValidationError = require('../../validation-error');
+                                var ValidationError = require('module-toolkit').ValidationError;
                                 reject(new ValidationError('data does not pass validation', errors));
                             }
                             var valid = data;
@@ -206,7 +225,7 @@ module.exports = class ItemManager extends BaseManager {
 
                             // 2c. begin: check if data has any error, reject if it has.
                             for (var prop in errors) {
-                                var ValidationError = require('../../validation-error');
+                                var ValidationError = require('module-toolkit').ValidationError;
                                 reject(new ValidationError('data does not pass validation', errors));
                             }
                         });

@@ -5,18 +5,18 @@ var ObjectId = require('mongodb').ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
-var BaseManager = require('../base-manager');
+var BaseManager = require('module-toolkit').BaseManager;
 var BateeqModels = require('bateeq-models');
 var CardType = BateeqModels.master.CardType;
-var map = BateeqModels.map; 
+var map = BateeqModels.map;
 //var generateCode = require('../../utils/code-generator');
- 
+
 module.exports = class CardTypeManager extends BaseManager {
     constructor(db, user) {
         super(db, user);
         this.collection = this.db.use(map.master.CardType);
     }
-    
+
     _createIndexes() {
         var dateIndex = {
             name: `ix_${map.master.CardType}__updatedDate`,
@@ -35,13 +35,13 @@ module.exports = class CardTypeManager extends BaseManager {
 
         return this.collection.createIndexes([dateIndex, codeIndex]);
     }
-    
-    _getQuery(paging) {  
-        
+
+    _getQuery(paging) {
+
         var basicFilter = {
             _deleted: false
-        }, keywordFilter={};
-        
+        }, keywordFilter = {};
+
         var query = {};
 
         if (paging.keyword) {
@@ -56,15 +56,15 @@ module.exports = class CardTypeManager extends BaseManager {
                     '$regex': regex
                 }
             };
-            
+
             keywordFilter = {
                 '$or': [filterCode, filterName]
-            }; 
+            };
         }
         query = { '$and': [basicFilter, paging.filter, keywordFilter] };
         return query;
     }
-    
+
     _validate(cardType) {
         var errors = {};
         return new Promise((resolve, reject) => {
@@ -76,8 +76,8 @@ module.exports = class CardTypeManager extends BaseManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
             // 1. end: Declare promises.
 
@@ -93,11 +93,11 @@ module.exports = class CardTypeManager extends BaseManager {
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required"; 
+                        errors["name"] = "name is required";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 

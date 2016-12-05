@@ -257,7 +257,7 @@ module.exports = class TokoKirimBarangReturnManager {
                         errors["reference"] = "reference is required";
                     }
                     else {
-                        getSpk = this.spkBarangManager.getByPackingList(valid.reference);
+                        getSpk = this.spkBarangManager.getByReference(valid.reference);
                     }
                     var getItem = [];
                     if (valid.items && valid.items.length > 0) {
@@ -302,7 +302,7 @@ module.exports = class TokoKirimBarangReturnManager {
                                     break;
                             }
                             for (var prop in errors) {
-                                var ValidationError = require('../../validation-error');
+                                var ValidationError = require('module-toolkit').ValidationError;
                                 reject(new ValidationError('data does not pass validation', errors));
                             }
                             resolve(valid);

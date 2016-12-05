@@ -1,6 +1,7 @@
 var should = require('should');
 var helper = require('../helper');
 var validate = require('bateeq-models').validator.sales;
+var generateCode = require('../../src/utils/code-generator');
 var manager;
 var testData;
 
@@ -19,9 +20,7 @@ function getDataDiscountItem() {
     var PromoRewardDiscountProduct = require('bateeq-models').sales.PromoRewardDiscountProduct;
     
     var promo = new Promo();
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
     promo.code = code;
     promo.name = 'Discount Item';
@@ -79,9 +78,7 @@ function getDataPackageSpecialPrice() {
     var PromoRewardSpecialPrice = require('bateeq-models').sales.PromoRewardSpecialPrice;
     
     var promo = new Promo();
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
     promo.code = code;
     promo.name = 'Package Special Price';

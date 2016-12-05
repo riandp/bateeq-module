@@ -114,7 +114,7 @@ module.exports = class ArticleThemeManager {
                 });
         });
     }
-    
+
     getSingleByQuery(query) {
         return new Promise((resolve, reject) => {
             this.articleThemeCollection
@@ -127,7 +127,7 @@ module.exports = class ArticleThemeManager {
                 });
         })
     }
-    
+
     getSingleByQueryOrDefault(query) {
         return new Promise((resolve, reject) => {
             this.articleThemeCollection
@@ -196,8 +196,8 @@ module.exports = class ArticleThemeManager {
                 })
         });
     }
- 
-    _validate(articleStyle) {  
+
+    _validate(articleStyle) {
         var errors = {};
         return new Promise((resolve, reject) => {
             var valid = new ArticleTheme(articleStyle);
@@ -208,8 +208,8 @@ module.exports = class ArticleThemeManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
             // 1. end: Declare promises.
 
@@ -225,11 +225,11 @@ module.exports = class ArticleThemeManager {
                     }
 
                     if (!valid.name || valid.name == '')
-                        errors["name"] = "name is required"; 
+                        errors["name"] = "name is required";
 
                     // 2c. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 

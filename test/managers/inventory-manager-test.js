@@ -72,7 +72,7 @@ it('#03. should success when read by storageId', function (done) {
 });
 
 it('#04. should success when read by storageId and itemId', function (done) {
-    manager.getByStorageIdAndArticleVarianId(storageId, itemId)
+    manager.getByStorageIdAndItemId(storageId, itemId)
         .then(inventory => {
             validate.inventory(inventory)
             done();

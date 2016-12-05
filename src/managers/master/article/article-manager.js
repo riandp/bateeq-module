@@ -86,8 +86,8 @@ module.exports = class ArticleManager {
 
     getSingleById(id) {
         return new Promise((resolve, reject) => {
-        if (id === '')
-            resolve(null);
+            if (id === '')
+                resolve(null);
             var query = {
                 _id: new ObjectId(id),
                 _deleted: false
@@ -104,8 +104,8 @@ module.exports = class ArticleManager {
 
     getSingleByIdOrDefault(id) {
         return new Promise((resolve, reject) => {
-        if (id === '')
-            resolve(null);
+            if (id === '')
+                resolve(null);
             var query = {
                 _id: new ObjectId(id),
                 _deleted: false
@@ -214,8 +214,8 @@ module.exports = class ArticleManager {
                         '$ne': new ObjectId(valid._id)
                     }
                 }, {
-                        code: valid.code
-                    }]
+                    code: valid.code
+                }]
             });
             //1. end:Declare promises.
 
@@ -235,7 +235,7 @@ module.exports = class ArticleManager {
 
                     // 2a. begin: check if data has any error, reject if it has.
                     for (var prop in errors) {
-                        var ValidationError = require('../../../validation-error');
+                        var ValidationError = require('module-toolkit').ValidationError;
                         reject(new ValidationError('data does not pass validation', errors));
                     }
 

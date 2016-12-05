@@ -1,6 +1,7 @@
 var should = require('should');
 var helper = require('../helper');
 var validate = require('bateeq-models').validator.inventory;
+var generateCode = require('../../src/utils/code-generator');
 var manager;
 var testData;
 
@@ -47,8 +48,7 @@ function getDataWithNewComponent() {
     var variantComponent = testData.items["UT-AV2"];
     var finishingDoc = {};
     var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
     finishingDoc.code = code;
     finishingDoc.date = now; 

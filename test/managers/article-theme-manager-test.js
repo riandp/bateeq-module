@@ -1,15 +1,14 @@
 var should = require('should');
 var helper = require('../helper');
 var validate = require('bateeq-models').validator.master.article;
+var generateCode = require('../../src/utils/code-generator');
 var manager;
 
 function getData() {
     var ArticleTheme = require('bateeq-models').master.article.ArticleTheme;
     var articleTheme = new ArticleTheme();
 
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
     articleTheme.code = code;
     articleTheme.name = `name[${code}]`;

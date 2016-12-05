@@ -5,19 +5,20 @@ var ObjectId = require('mongodb').ObjectId;
 
 // internal deps
 require('mongodb-toolkit');
+var BaseManager = require('module-toolkit').BaseManager;
 var BateeqModels = require('bateeq-models');
 var map = BateeqModels.map;
 var generateCode = require('../../utils/code-generator');
 
 var SPKDoc = BateeqModels.merchandiser.SPK;
 var SPKItem = BateeqModels.merchandiser.SPKItem;
+var FinishedGoods = BateeqModels.master.FinishedGoods;
 
 var moduleId = "EFR-PK/PBA";
 
-module.exports = class SPKBarangEmbalaseManager {
+module.exports = class SPKBarangEmbalaseManager extends BaseManager {
     constructor(db, user) {
-        this.db = db;
-        this.user = user;
+        super(db, user);
         this.SPKDocCollection = this.db.use(map.merchandiser.SPKDoc);
         var StorageManager = require('../master/storage-manager');
         this.storageManager = new StorageManager(db, user);
@@ -28,8 +29,14 @@ module.exports = class SPKBarangEmbalaseManager {
         var InventoryManager = require('../inventory/inventory-manager');
         this.inventoryManager = new InventoryManager(db, user);
 
-        var ModuleManager = require('../core/module-manager');
+        var ModuleManager = require('../master/module-manager');
         this.moduleManager = new ModuleManager(db, user);
+
+        var FinishedGoodsManager = require('../master/finished-goods-manager');
+        this.finishedGoodsManager = new FinishedGoodsManager(db, user);
+
+        var PkManager = require('./efr-pk-manager');
+        this.pkManager = new PkManager(db, user);
 
     }
 
@@ -260,8 +267,8 @@ module.exports = class SPKBarangEmbalaseManager {
                                 '$ne': new ObjectId(valid._id)
                             }
                         }, {
-                                code: valid.code
-                            }]
+                            code: valid.code
+                        }]
                     });
                     var config = module.config;
                     if (!valid.sourceId || valid.sourceId == '')
@@ -359,7 +366,7 @@ module.exports = class SPKBarangEmbalaseManager {
 
                             var inventoryItems = results.slice(3, results.length);
                             // 2a. begin: Validate error on item level.
-                            if (inventoryItems.length >0) {
+                            if (inventoryItems.length > 0) {
                                 var itemErrors = [];
                                 for (var inventoryItem of inventoryItems) {
                                     var index = inventoryItems.indexOf(inventoryItem);
@@ -378,7 +385,7 @@ module.exports = class SPKBarangEmbalaseManager {
                                             item.articleVariant = inventoryItem.articleVariant;
                                         }
                                     }
-                                    if (item.quantity == undefined ||  item.quantity == "") {
+                                    if (item.quantity == undefined || item.quantity == "") {
                                         itemError["quantity"] = "quantity is required";
                                     }
                                     else if (parseInt(item.quantity) <= 0) {
@@ -410,7 +417,7 @@ module.exports = class SPKBarangEmbalaseManager {
 
                             // 2c. begin: check if data has any error, reject if it has.
                             for (var prop in errors) {
-                                var ValidationError = require('../../validation-error');
+                                var ValidationError = require('module-toolkit').ValidationError;
                                 reject(new ValidationError('data does not pass validation', errors));
                             }
                             valid = new SPKDoc(valid);
@@ -424,6 +431,211 @@ module.exports = class SPKBarangEmbalaseManager {
                 .catch(e => {
                     reject(e);
                 });
+        });
+    }
+
+    insert(dataFile, sourceId, destinationId, dateForm) {
+        var errors = {};
+        return new Promise((resolve, reject) => {
+            var idDestination, idSource;
+            var data = [];
+            if (dataFile != "") {
+                for (var i = 1; i < dataFile.length; i++) {
+                    data.push({ "PackingList": dataFile[i][0], "Password": dataFile[i][1], "Barcode": dataFile[i][2], "Nama": dataFile[i][3], "Size": dataFile[i][4], "Harga": dataFile[i][5], "UOM": dataFile[i][6], "QTY": dataFile[i][7], "RO": dataFile[i][8] });
+                }
+
+            }
+            else
+                errors["File"] = "data tidak ada";
+
+            if (sourceId != "")
+                idSource = sourceId;
+            else
+                errors["source"] = "source tidak boleh kosong";
+
+            if (destinationId != "")
+                idDestination = destinationId;
+            else
+                errors["destination"] = "destination tidak boleh kosong";
+
+            for (var i = 0; i < data; i++) {
+                if (data[i][PackingList] == "") {
+                    errors["PackingList"] = "Packing List tidak boleh kosong";
+                }
+
+                if (data[i][Password] == "") {
+                    errors["Password"] = "Password tidak boleh kosong";
+                }
+                if (data[i][Barcode] == "") {
+                    errors["Barcode"] = "Barcode tidak boleh kosong";
+                }
+                if (data[i][Nama] == "") {
+                    errors["Nama"] = "Nama tidak boleh kosong";
+                }
+                if (data[i][Size] == "") {
+                    errors["Size"] = "Size tidak boleh kosong";
+                }
+                if (data[i][Harga] == "") {
+                    errors["Harga"] = "Harga tidak boleh kosong";
+                }
+                if (data[i][UOM] == "") {
+                    errors["UOM"] = "UOM tidak boleh kosong";
+                }
+                if (data[i][QTY] == "") {
+                    errors["QTY"] = "QTY tidak boleh kosong";
+                }
+                if (data[i][RO] == "") {
+                    errors["RO"] = "RO tidak boleh kosong";
+                }
+            }
+            if (Object.getOwnPropertyNames(errors).length == 0) {
+
+                var fg = [];
+                for (var i = 0; i < data.length; i++) {
+                    fg.push({ "code": data[i]["Barcode"], "name": data[i]["Nama"], "uom": data[i]["UOM"], "realizationOrder": data[i]["RO"], "size": data[i]["Size"], "domesticSale": data[i]["Harga"] });
+                }
+
+                var flags = [], distinctFg = [];
+                for (var i = 0; i < fg.length; i++) {
+                    if (flags[fg[i].code]) continue;
+                    flags[fg[i].code] = true;
+                    distinctFg.push(fg[i]);
+                }
+
+                var promises = []
+                for (var fg of distinctFg) {
+                    var fGoods = new Promise((resolve, reject) => {
+                        var item = fg;
+                        this.itemManager.getByCode(item.code)
+                            .then(resultItem => {
+                                if (resultItem)
+                                    resolve(resultItem);
+                                else {
+                                    var finishGood = new FinishedGoods();
+                                    finishGood.code = item.code;
+                                    finishGood.name = item.name;
+                                    finishGood.uom = item.uom;
+                                    finishGood.article.realizationOrder = item.realizationOrder;
+                                    finishGood.size = item.size;
+                                    finishGood.domesticSale = item.domesticSale;
+                                    this.finishedGoodsManager.create(finishGood)
+                                        .then(id => {
+                                            this.itemManager.getSingleById(id)
+                                                .then(resultItem => {
+                                                    resolve(resultItem);
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                });
+                                        })
+                                        .catch(e => {
+                                            reject(e);
+                                        });
+                                }
+
+                            })
+                            .catch(e => {
+                                reject(e);
+                            });
+                    });
+                    promises.push(fGoods);
+                }
+
+                var getDestination = this.storageManager.getSingleByIdOrDefault(destinationId);
+                var getSource = this.storageManager.getSingleByIdOrDefault(sourceId);
+
+                Promise.all([getSource, getDestination].concat(promises))
+                    .then(results => {
+                        var source = results[0];
+                        var destination = results[1];
+                        var valid_fg = results.slice(2, results.length);
+
+                        var productMap = {};
+                        for (var item of valid_fg)
+                            productMap[item.code] = item;
+
+                        var spks = new Map();
+
+                        for (var rowFile of data) {
+                            if (!spks.has(rowFile.PackingList))
+                                spks.set(rowFile.PackingList, {});
+
+                            var workingSpk = spks.get(rowFile.PackingList);
+                            workingSpk.code = generateCode(moduleId);
+                            workingSpk.source = source;
+                            workingSpk.sourceId = new ObjectId(source._id);
+                            workingSpk.destination = destination;
+                            workingSpk.destinationId = new ObjectId(destination._id);
+                            workingSpk.packingList = rowFile.PackingList;
+                            workingSpk.reference = rowFile.PackingList;
+                            workingSpk.date = dateForm;
+                            workingSpk.password = rowFile.Password;
+                            workingSpk.items = workingSpk.items || [];
+
+                            var itemFg = productMap[rowFile.Barcode];
+
+                            workingSpk.items.push({
+                                itemId: itemFg._id,
+                                item: itemFg,
+                                quantity: parseInt(rowFile.QTY),
+                                remark: ''
+                            });
+                        }
+
+
+                        var promisesSpk = [];
+                        for (var spkDocument of spks.values()) {
+                            var spkDocs = new Promise((resolve, reject) => {
+                                var spkDoc = spkDocument;
+                                this.pkManager.getByPackingList(spkDoc.packingList)
+                                    .then(resultItem => {
+                                        if (resultItem)
+                                            this.SPKDocCollection.update(resultItem)
+                                                .then(resultItem => {
+                                                    resolve(resultItem);
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                });
+                                        else {
+                                            var spkResult = new SPKDoc(spkDoc);
+                                            this.SPKDocCollection.insert(spkResult)
+                                                .then(id => {
+                                                    this.pkManager.getSingleById(id)
+                                                        .then(resultItem => {
+                                                            resolve(resultItem);
+                                                        })
+                                                        .catch(e => {
+                                                            reject(e);
+                                                        });
+                                                })
+                                                .catch(e => {
+                                                    reject(e);
+                                                });
+                                        }
+
+                                    })
+                                    .catch(e => {
+                                        reject(e);
+                                    });
+                            });
+                            promisesSpk.push(spkDocs);
+                        }
+
+                        Promise.all(promisesSpk)
+                            .then(resultItem => {
+                                resolve(resultItem);
+                            })
+                            .catch(e => {
+                                reject(e);
+                            });
+
+                    })
+                    .catch(e => {
+                        reject(e);
+                    });
+            }
+
         });
     }
 

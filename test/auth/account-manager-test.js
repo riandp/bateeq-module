@@ -2,15 +2,14 @@ var helper = require("../helper");
 var AccountManager = require("../../src/managers/auth/account-manager");
 var validateAccount = require('bateeq-models').validator.auth.account;
 var instanceManager = null;
+var generateCode = require('../../src/utils/code-generator');
 require("should");
 
 function getData() {
     var Account = require('bateeq-models').auth.Account;
     var account = new Account();
 
-    var now = new Date();
-    var stamp = now / 1000 | 0;
-    var code = stamp.toString(36);
+    var code = generateCode('UnitTest');
 
     account.username = `user${code}@unit.test`;
     account.password = "Standar123";
